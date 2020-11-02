@@ -1,30 +1,33 @@
 import Vapor
 import Foundation
 
-public class GoogleRouter: FederatedServiceRouter {
+public class DropboxRouter: FederatedServiceRouter {
     public let tokens: FederatedServiceTokens
     public let callbackCompletion: (Request, String) throws -> (EventLoopFuture<ResponseEncodable>)
     public var scope: [String] = []
     public let callbackURL: String
-    public let accessTokenURL: String = "https://www.googleapis.com/oauth2/v4/token"
-    public let service: OAuthService = .google
-    public let callbackHeaders: HTTPHeaders = {
+    public let accessTokenURL: String = "https://api.dropboxapi.com/oauth2/token"
+    
+    public var callbackHeaders: HTTPHeaders {
         var headers = HTTPHeaders()
+        headers.basicAuthorization = .init(username: tokens.clientID, password: tokens.clientSecret)
         headers.contentType = .urlEncodedForm
         return headers
-    }()
-
+    }
+    
+    public let service: OAuthService = .dropbox
+    
     public required init(callback: String, completion: @escaping (Request, String) throws -> (EventLoopFuture<ResponseEncodable>)) throws {
-        self.tokens = try GoogleAuth()
+        self.tokens = try DropboxAuth()
         self.callbackURL = callback
         self.callbackCompletion = completion
     }
     
-    public func authURL(_ request: Request) throws -> String {        
+    public func authURL(_ request: Request) throws -> String {
         var components = URLComponents()
         components.scheme = "https"
-        components.host = "www.accounts.google.com"
-        components.path = "/o/oauth2/auth"
+        components.host = "www.dropbox.com"
+        components.path = "/oauth2/authorize"
         components.queryItems = [
             clientIDItem,
             redirectURIItem,
@@ -40,10 +43,8 @@ public class GoogleRouter: FederatedServiceRouter {
     }
     
     public func callbackBody(with code: String) -> ResponseEncodable {
-        GoogleCallbackBody(code: code,
-                           clientId: tokens.clientID,
-                           clientSecret: tokens.clientSecret,
-                           redirectURI: callbackURL)
+        DropboxCallbackBody(code: code,
+                            redirectURI: callbackURL)
     }
-
+    
 }

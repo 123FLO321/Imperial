@@ -1,10 +1,11 @@
 import Vapor
 
-struct GoogleCallbackBody: Content {
+struct MicrosoftCallbackBody: Content {
     let code: String
     let clientId: String
     let clientSecret: String
     let redirectURI: String
+    let scope: String
     let grantType: String = "authorization_code"
     
     static var defaultContentType: HTTPMediaType = .urlEncodedForm
@@ -15,5 +16,6 @@ struct GoogleCallbackBody: Content {
         case clientSecret = "client_secret"
         case redirectURI = "redirect_uri"
         case grantType = "grant_type"
+        case scope
     }
 }
